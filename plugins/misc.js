@@ -17,9 +17,11 @@ const {
     getJson,
     postJson,
     isPrivate,
+    ssweb,
     extractUrlFromMessage
   } = require("../lib/");
   const axios = require("axios");
+  
   
   System({
       pattern: "wm",
@@ -33,16 +35,17 @@ const {
   });
 
   System({
-      pattern: "ss", 
-      fromMe: isPrivate,
-      desc: "take screenshot of a web", 
-      type: "misc",
-  }, async (message, match) => {
-      match = message.reply_message.text || match;
-      match = await extractUrlFromMessage(match);
-      if(!match) return message.reply("_*Give me a url to take ss*_");
-      await message.sendFromUrl(await LokiXer(`ssweb?link=${match}`));
-  });
+  pattern: 'ss ?(.*)',
+  fromMe: isPrivate,
+  desc: 'Takes a screenshot of a website',
+  type: 'misc',
+}, async (message, match, m) => {
+  if (!match) return await message.reply(`*Please provide a URL*`);
+  const url = match;
+  const response = await ssweb(url);
+  const screenshotUrl = response.iurl; 
+  await m.sendFromUrl(screenshotUrl, { quoted: message.data, caption: `*Screenshot of ${url}*` });
+});
 
   System({
       pattern: "save", 
@@ -54,18 +57,7 @@ const {
      await message.client.forwardMessage(message.user.jid, message.reply_message.message);
   });
   
-  System({
-      pattern: "trt", 
-      fromMe: isPrivate,
-      desc: "change language", 
-      type: "converter",
-  }, async (m, match) => {
-      match = m.reply_message.text || match;
-      if (!match) return await m.reply("_provided text to translate *eg: i am fine;ml*_");
-      const text = match.split(";");
-      const result = await postJson("https://api.lokiser.xyz/post/trt", { text: text[0], lang: text[1] || config.LANG });
-      return await m.reply(result.message);
-  });
+ 
   
   System({
       pattern: "attp",
@@ -83,18 +75,7 @@ const {
         await message.send(buff, { packname, author }, "sticker");
   });
   
-  System({
-      pattern: "bitly",
-      fromMe: isPrivate,
-      desc: "To get URL short",
-      type: "converter",
-  }, async (message, match) => {
-     match = match || message.reply_message.text;
-     if (!match) return await message.reply("_Reply to a URL or enter a URL_");          
-     if (!isUrl(match)) return await message.reply("_Not a valid URL_");
-     let short = await getJson(await LokiXer(`bitly?link=${match}`));
-     return await message.reply(short.link);
-  });
+ 
   
   System({
       pattern: 'whois ?(.*)',
@@ -137,7 +118,7 @@ const {
         LANG = lang[1];
         if (message.quoted.text) match = message.reply_message.text;
       }
-      const { data } = await axios.post('https://api.lokiser.xyz/google/tts', { text: match, lang: LANG}, { responseType: 'arraybuffer' })
+      const { data } = await axios.post('https://api-loki-ser-1o2h.onrender.com/google/tts', { text: match, lang: LANG}, { responseType: 'arraybuffer' })
       await message.reply(data, { mimetype: 'audio/ogg; codecs=opus', ptt: true }, "audio");
   });
   
@@ -162,3 +143,5 @@ const {
          await message.send(`*_${tempmail}_*\n\n*Dear user, this is your temp mail*\n\n*User: ${user}*\n*Mail received: ${data.tempmail.length}*\n\n\`\`\`1 ‣\`\`\` *Check mail*\n\`\`\`2 ‣\`\`\` *Next mail*\n\n*_Send a Number as reply_*`);
       }
   });
+
+  System({ pattern: "mee", fromMe: true, desc: "self mention", type: "user", }, async (message, match) => { await message.client.sendMessage(message.chat, { text: `@${message.sender.split("@")[0]}`, mentions: [message.sender] }) });

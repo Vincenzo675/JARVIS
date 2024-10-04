@@ -10,7 +10,7 @@ Jarvis - Loki-Xer
 ------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 
-const { System, isPrivate, extractUrlFromMessage, sleep, getJson, config, isUrl, IronMan, getBuffer, toAudio, terabox } = require("../lib/");
+const { System, isPrivate, extractUrlFromMessage, sleep, getJson, config, isUrl, IronMan, getBuffer, toAudio, terabox, instaDl, aptoideDl, tiktokDl } = require("../lib/");
 
 
 const fetchData = async (mediafireUrl) => {
@@ -72,21 +72,26 @@ async (message, match, client) => {
 });
 
 System({
-    pattern: 'apk ?(.*)',
-    fromMe: isPrivate,
-    desc: 'Download apps from Aptoide',
-    type: 'download'
-}, async (message, match) => {
-    match = match || message.reply_message.text;
-    if (!match) return await message.reply("*Nᴇᴇᴅ ᴀɴ ᴀᴘᴘ ɴᴀᴍᴇ*\n*Exᴀᴍᴘʟᴇ: ꜰʀᴇᴇ ꜰɪʀᴇ*");
-    var { status, details } = await getJson(config.API + "scraper/app/download?id=" + encodeURIComponent(match));
-    if (status) {
-      var send = await message.send(`_*Dᴏᴡɴʟᴏᴀᴅɪɴɢ : ${details.appname}*_`);
-      await message.client.sendMessage({'url': details.link}, { 'mimetype': "application/vnd.android.package-archive",'fileName': details.appname + ".apk"}, 'document');
-      await send.edit("_*Aᴘᴘ Dᴏᴡɴʟᴏᴀᴅᴇᴅ*_");
-    } else {
-      await message.reply("_Failed to download APK. Please check the app name or try again later_");
-    }
+  pattern: 'apk ?(.*)',
+  fromMe: isPrivate,
+  desc: 'Downloads and sends an app ',
+  type: 'download',
+}, async (message, match, m) => {
+  const appId = match;
+  if (!appId) return await message.reply('*Nᴇᴇᴅ ᴀɴ ᴀᴘᴘ ɴᴀᴍᴇ*\n*Exᴀᴍᴘʟᴇ: ꜰʀᴇᴇ ꜰɪʀᴇ*');
+
+  const appInfo = await aptoideDl(appId);
+  await message.client.sendMessage(message.chat, {
+    document: {
+      url: appInfo.link,
+    },
+    mimetype: 'application/vnd.android.package-archive',
+    fileName: appInfo.appname, 
+    caption: `*App Name:* ${appInfo.appname}\n*Developer:* ${appInfo.developer}`,
+  }, {
+    quoted: message.data,
+  });
+ 
 });
 
 System({
@@ -96,12 +101,12 @@ System({
     type: 'download',
 }, async (message, text) => {
     let match = await extractUrlFromMessage(text || message.reply_message.text);
-    if (!match) return await message.send("*Need a Facebook public media link*\n_Example: .fb ");       
-    const response = await getJson(IronMan(`ironman/dl/fb?url=${match}`));
-    await message.reply({url: response.ironman[0].url }, { caption: "_*Downloaded🤍*_" }, "video")
+    if (!match) return await message.send("*Need a Facebook public media link*\n_Example: .fb_ ");       
+    const res = await fetch(IronMan(`ironman/dl/fbdl?link=${match}`));
+    const data = await res.json();
+    await message.reply({url: data.data.HD }, { caption: "_*Downloaded🤍*_" }, "video")
 });
 
-  
 System({
     pattern: 'pinterest ?(.*)',
     fromMe: isPrivate,
@@ -116,20 +121,22 @@ System({
     await message.sendFromUrl(result.LokiXer.url, { caption: "_*downloaded 🤍*_" });
 });
 
-
 System({
-    pattern: "insta",
-    fromMe: isPrivate,
-    desc: "Download Instagram media",
-    type: "download",
+    pattern: 'insta ?(.*)',
+    fromMe: true,
+    desc: 'instagram downloader',
+    type: 'download',
 }, async (message, match) => {
-   match = await extractUrlFromMessage(match || message.reply_message.text);
-   if (!match) return await message.reply('_provide an Instagram URL_');
-   if (!isInstaUrl(match)) return await message.send("_Please provide a valid Instagram URL_");
-   const { result } = await getJson(config.API + "download/insta?url=" + match);
-   if (result.length === 0) return await message.send("_No media found for this Instagram URL_");
-   for (const video of result) {
-     await message.sendFromUrl(video.download_link, { caption: "_*Download 🤍*_" });
+    const url = await extractUrlFromMessage(match || message.reply_message.text);
+    if (!url) return await message.reply('_Please provide an Instagram *url*'); 
+    if (!isUrl(url)) return await message.reply("_Please provide a valid Instagram *url*");
+    if (!url.includes("instagram.com")) return await message.reply("_Please provide a valid Instagram *url*");
+    const data = await instaDl(url);
+    if (!data || data.length === 0) return await message.reply("_No content found at the provided URL.");
+    for (const imageUrl of data) {
+        if (imageUrl) {
+            await message.sendFromUrl(imageUrl);
+        }
     }
 });
 
@@ -150,7 +157,7 @@ System({
   }
   const url = await extractUrlFromMessage(match);
   if (!isInstaUrl(url)) return message.reply("_*Provide a valid Instagram story URL*_");
-  const { result } = await getJson(config.API + "download/insta?url=" + url);
+  const result = await instaDl(url);
   if (!result) return await message.send("Not Found");
   if (result.length === 1) return await message.sendFromUrl(result[0].download_link);
   const options = result.map((u, index) => ({ name: "quick_reply", display_text: `${index + 1}/${result.length}`, id: `story dl-url ${u.download_link}` }));
@@ -226,9 +233,9 @@ System({
     type: 'download',
 }, async (message, match, m) => {
     if (!match || !match.includes('x.com')) return await message.send("_Need a x(twitter) media url_");
-    const twitterVideoUrl = match.trim();
-    const { media } = await getJson(`https://api-ironman444ff.koyeb.app/ironman/dl/x?url=${encodeURIComponent(twitterVideoUrl)}`);
-    await m.sendFromUrl(media[0].url);
+    const url = match.trim();
+    const { media } = await getJson(IronMan(`ironman/dl/x?url=${encodeURIComponent(url)}`));
+    await message.sendFromUrl(media[0].url);
 });
 
 System({
@@ -266,16 +273,27 @@ System({
  });
 
 System({
-	pattern: 'tiktok ?(.*)',
-	fromMe: isPrivate,
-	desc: 'Sends TikTok video ',
-	type: 'download',
+  pattern: 'tiktok ?(.*)',
+  fromMe: isPrivate,
+  desc: 'Sends TikTok video or image',
+  type: 'download',
 }, async (message, match, msg) => {
-       match = await extractUrlFromMessage(match || message.reply_message.text);
-       if (!isUrl(match)) return message.reply("*Reply to Tiktok url or provide a Tiktok url*");
-       if (!match || !match.includes("tiktok")) return message.reply("*Reply to tiktok url or provide a tiktok url*");   
-       const { result } = await getJson(IronMan("ironman/dl/v2/tiktok?url=" + match), { headers: { 'ApiKey': 'IRON-M4N' } });
-       await message.reply({ url:result.video }, { caption: "*_download🤍_*"}, "video");
+  match = await extractUrlFromMessage(match || message.reply_message.text);
+  if (!isUrl(match)) return message.reply("*Reply to TikTok URL or provide a TikTok URL*");
+  if (!match || !match.includes("tiktok")) return message.reply("*Reply to TikTok URL or provide a TikTok URL*");
+  var data = await tiktokDl(match);
+  var vidd = data.data.find(item => item.type === 'nowatermark_hd');
+  var pic = data.data.filter(item => item.type === 'photo');
+  if (vidd) {
+    await message.client.sendMessage(message.chat, { video: { url: vidd.url }, caption: "*_Downloaded!_*" }, { quoted: message.data });
+  } else if (pic.length > 0) {
+    for (var photo of pic) {
+      await message.client.sendMessage(message.chat, { image: { url: photo.url }, caption: "*_Downloaded!_*" }, { quoted: message.data });
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  } else {
+    return message.reply("*Couldn't find valid media to download*");
+  }
 });
 
 System({

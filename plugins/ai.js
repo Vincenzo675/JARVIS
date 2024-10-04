@@ -15,8 +15,11 @@ const {
     IronMan,
     postJson,
     isPrivate,
-    interactWithAi
-} = require("../lib/"); 
+    interactWithAi,
+    GraphOrg,
+    readMore
+} = require("../lib/");
+
 
 System({
     pattern: "thinkany", 
@@ -103,7 +106,7 @@ System({
 System({
     pattern: "bb", 
     fromMe: isPrivate,
-    desc: "ai chatgpt", 
+    desc: "blackbox ai", 
     type: "ai",
 }, async (message, match, m) => {
        match = match || m.reply_message.text;
@@ -149,4 +152,41 @@ System({
     const img = await message.reply_message.downloadAndSave();
     const upscale = await interactWithAi("upscale", img);
     await message.send(upscale, { caption: "_*upscaled 🍉*_" }, "img");
+});
+
+System({
+	pattern: 'ocr ?(.*)',
+	fromMe: isPrivate,
+	desc: 'Text Recognition from image',
+	type: 'ai',
+}, async (message, match) => {
+    if(!message.reply_message.image) return await message.reply("_Reply to a image_");
+    const data = await GraphOrg(await message.reply_message.downloadAndSaveMedia());
+    const res = await fetch(IronMan(`ironman/ai/ocr?url=${data}`));
+    if (res.status !== 200) return await message.reply('*Error*');
+    const ress = await res.json();
+    if (!ress.text) return await message.reply('*Not found*');
+    await message.reply(`\`\`\`${ress.text}\`\`\``);
+});
+
+System({
+  pattern: 'detectai ?(.*)',
+  fromMe: isPrivate,
+  desc: 'Detects AI-generated text',
+  type: 'ai',
+}, async (message, match, m) => {
+  const text = message.reply_message.text || match;
+  const res = await fetch(IronMan(`ironman/ai/detectai?text=${encodeURIComponent(text)}`));
+  const data = await res.json();
+  let output = "*𝙰𝙸 𝙳𝙴𝚃𝙴𝙲𝚃𝙸𝙾𝙽*\n\n";
+  for (let i = 0; i < data.length; i++) {
+    const item = data[i];
+    output += `*тєχт:* ${item.text}\n`;
+    output += `*ѕ¢σяє:* ${(item.score * 100).toFixed(2)}%\n`;
+    output += `*туρє:* ${item.type}\n\n`;
+    if (i === 2 && data.length > 3) {
+      output += await readMore();
+    }
+  }
+  await message.reply(output.trim());
 });

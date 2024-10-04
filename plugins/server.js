@@ -33,10 +33,11 @@ System({
 }, async (message, match, m) => {
   const server = message.client.server;
   if (!match) return await message.reply(`Example: .setvar SUDO:917025673121`);
-  const [key, value] = match.split(":").map(s => s.trim());
+  const [key, ...part] = match.split(":");
+  const value = part.join(":").trim();
   if (!key || !value) return await message.send(`_*Example: .setvar SUDO:917025673121*_`);
   if (server === "HEROKU") {
-    await m.send(`_*updated var ${key.toUpperCase()}: ${value}*`);
+    await m.send(`_*Updated variable ${key.toUpperCase()}: ${value}*`);
     const env = await setVar(key.toUpperCase(), value);
     if (!env) return m.reply(env);
   } else if (server === "KOYEB") {
@@ -46,12 +47,13 @@ System({
     await m.reply(`*${server} can't change variable, change it manually*`);
   } else {
     const env = await changeVar(key.toUpperCase(), value);
-    if (!env) return m.send("*Error in changing variable*");  
+    if (!env) return m.send("*Error in changing variable*");
     await setData(key.toUpperCase(), value, !!value, "vars");
     await m.reply(`_*Environment variable ${key.toUpperCase()} set to ${value}*_`);
     await require('pm2').restart('index.js');
   }
 });
+
 
 System({
     pattern: "platform",
@@ -59,7 +61,7 @@ System({
     type: "server",
     desc: "Show which platform you delpoyed",
 }, async (m, match) => {
-    m.reply("_*" + "You ara delpoyed on " + m.client.server + "*_");
+    m.reply("_*" + "You are delpoyed on " + m.client.server + "*_");
 });
 
 System({
@@ -67,7 +69,7 @@ System({
     fromMe: true,
     type: "server",
     desc: "Delete environment variable",
-}, async (message, match) => {
+}, async (message, match, m) => {
     const server = message.client.server;
     if (!match) return await message.reply("_Example: delvar sudo_");
     const key = match.trim().toUpperCase();
@@ -81,7 +83,7 @@ System({
     } else if (server === "RAILWAY") {
       await m.reply(`*${server} can't change variable, change it manually*`);
     } else {
-      const env = await changeVar(key.toUpperCase(), null);
+      const env = await changeVar(key.toUpperCase(), "");
       if (!env) return m.reply("*Error in deleted variable*");  
       await setData(key.toUpperCase(), null, false, "vars");
       await m.reply(`_*deleted var ${key.toUpperCase()}*_`);
@@ -253,7 +255,7 @@ System({
   type: "server",
 }, async (message) => {
   await message.send("_*Restarting*_");
-  message.client.server === "HEROKU" ? await herokuRestart(message) : await shell("pm2 restart jarvis");
+  message.client.server === "HEROKU" ? await herokuRestart(message) : await shell("pm2 restart Jarvis-md");
 });
 
 System({
