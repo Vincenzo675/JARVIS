@@ -23,7 +23,7 @@ module.exports = {
   ANTIBOT_MSG: process.env.ANTIBOT_MSG || "_*Bot Not allowed in this group*_",
   ANTIWORD_MSG: process.env.ANTIWORD_MSG || "_*antiword deleted successfully*_",
   ALIVE_DATA : process.env.ALIVE_DATA || "_*Hy &sender i am alive now*_\n\n_PLATFORM: &platform_\n_RUNTIME : &runtime_\n\n_. type alive to update your alive message_",
-  SESSION_ID: process.env.SESSION_ID || 'Jarvis_c9ed_758f_a1bd_fd2b_2d0b_0309_6ae3_0835',
+  SESSION_ID: process.env.SESSION_ID || 'Jarvis_d58b_e4c9_73e9_be4a_2a68_dbf9_39a7_5af5',
   LANG: process.env.LANG || 'EN',
   SETVV: process.env.SETVV || 'DM',
   ELEVENLABS: process.env.ELEVENLABS,
@@ -53,6 +53,6 @@ module.exports = {
   HEROKU_APP_NAME: process.env.HEROKU_APP_NAME || '',
   HEROKU_API_KEY: process.env.HEROKU_API_KEY || '',
   BOT_INFO: process.env.BOT_INFO || 'ᴊᴀʀᴠɪꜱ;ʟᴏᴋɪ-xᴇʀ;https://graph.org/file/1506e5842805b0968c5cf.mp4',
-  WORK_TYPE: process.env.WORK_TYPE || 'public',
+  WORK_TYPE: process.env.WORK_TYPE || 'private',
   DATABASE: DATABASE_URL === "./database.db" ? new Sequelize({ dialect: "sqlite", storage: DATABASE_URL, logging: false }) : new Sequelize(DATABASE_URL, {dialect: "postgres", ssl: true, protocol: "postgres", dialectOptions: { native: true, ssl: { require: true, rejectUnauthorized: false },}, logging: false }),
 };
