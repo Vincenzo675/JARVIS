@@ -68,7 +68,7 @@ System({
         }
         menu += `\n┃  ╰─────────────···▸`;
     }
-    menu += ` ╰━━━━━━━━━━━┈⊷\nmade with 🤍`;
+    menu += ` ╰━━━━━━━━━━━┈⊷\n𝓠𝓾𝓮𝓮𝓷 𝓑𝓲𝓷𝓭𝔂𝓪`;
     const url = BOT_INFO.split(';')[2];
     if (isUrl(url)) await message.sendFromUrl(url, { caption: menu });
     else await message.send(menu);
