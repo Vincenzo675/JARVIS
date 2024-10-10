@@ -17,7 +17,7 @@ module.exports = {
   PORT: toBool(process.env.PORT) || 8000,
   PM_BLOCKER: toBool(process.env.PM_BLOCKER) || false,
   PM_BLOCKER_MSG: process.env.PM_BLOCKER_MSG || "_*Pm blocker active on this chat*_",
-  AUDIO_DATA: process.env.AUDIO_DATA || 'ʟᴏᴋɪ-xᴇʀ;ᴊᴀʀᴠɪꜱ;https://graph.org/file/58ea74675af7836579a3a.jpg',
+  AUDIO_DATA: process.env.AUDIO_DATA || 'Vince;𝓠𝓾𝓮𝓮𝓷 𝓑𝓲𝓷𝓭𝔂𝓪;https://graph.org/file/58ea74675af7836579a3a.jpg',
   WARN_COUNT: process.env.WARN_COUNT || '3',
   ANTILINK_MSG: process.env.ANTILINK_MSG || "_*Link Not allowed in this group*_",
   ANTIBOT_MSG: process.env.ANTIBOT_MSG || "_*Bot Not allowed in this group*_",
